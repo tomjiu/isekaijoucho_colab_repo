@@ -20,8 +20,8 @@ Recommended assets:
 After uploading release assets, paste their browser-download URLs into the notebook:
 
 ```python
-DATA_ZIP_URL = "https://github.com/<user>/<repo>/releases/download/v0-data/isekaijoucho_source_audio.zip"
-CHECKPOINT_ZIP_URL = "https://github.com/<user>/<repo>/releases/download/v0-data/isekaijoucho_epoch1_checkpoint.zip"
+DATA_ZIP_URL = "https://github.com/tomjiu/isekaijoucho_colab_repo/releases/download/v0-data/isekaijoucho_source_audio.zip"
+CHECKPOINT_ZIP_URL = "https://github.com/tomjiu/isekaijoucho_colab_repo/releases/download/v0-data/isekaijoucho_epoch1_checkpoint.zip"
 ```
 
 `CHECKPOINT_ZIP_URL` can be left empty to train from pretrained HiFi-GAN instead of resuming local epoch 1.
@@ -29,4 +29,3 @@ CHECKPOINT_ZIP_URL = "https://github.com/<user>/<repo>/releases/download/v0-data
 ## Expected Speed
 
 On a Colab T4, `batch_size=6` or `8` is usually much faster than the local GTX 1650 `batch_size=1`. If Colab reports CUDA OOM, lower `BATCH_SIZE` in the notebook.
-
