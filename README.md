@@ -26,6 +26,19 @@ CHECKPOINT_ZIP_URL = "https://github.com/tomjiu/isekaijoucho_colab_repo/releases
 
 `CHECKPOINT_ZIP_URL` can be left empty to train from pretrained HiFi-GAN instead of resuming local epoch 1.
 
+## Automatic Backups
+
+The notebook includes an optional GitHub backup token prompt. For automatic backups, create a fine-grained GitHub token for this repository only with:
+
+- Repository access: `tomjiu/isekaijoucho_colab_repo`
+- Permissions: `Contents` -> `Read and write`
+
+Paste it into the notebook's `GitHub backup token` cell. During training, each exported epoch model such as `isekaijoucho_whispertrim_2e_2010s.pth` is uploaded to:
+
+`https://github.com/tomjiu/isekaijoucho_colab_repo/releases/tag/colab-model-backups`
+
+Leave the token empty if you only want the final Colab download.
+
 ## Expected Speed
 
 On a Colab T4, `batch_size=6` or `8` is usually much faster than the local GTX 1650 `batch_size=1`. If Colab reports CUDA OOM, lower `BATCH_SIZE` in the notebook.
