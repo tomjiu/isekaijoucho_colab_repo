@@ -16,15 +16,18 @@ Recommended assets:
 
 - `isekaijoucho_source_audio.zip`: original MP3/WAV source files.
 - `isekaijoucho_epoch1_checkpoint.zip`: optional local epoch-1 resume checkpoints.
+- `isekaijoucho_preprocessed_logs.zip`: optional preprocessed Applio logs to skip Colab CPU preprocessing and feature extraction.
 
 After uploading release assets, paste their browser-download URLs into the notebook:
 
 ```python
 DATA_ZIP_URL = "https://github.com/tomjiu/isekaijoucho_colab_repo/releases/download/v0-data/isekaijoucho_source_audio.zip"
 CHECKPOINT_ZIP_URL = "https://github.com/tomjiu/isekaijoucho_colab_repo/releases/download/v0-data/isekaijoucho_epoch1_checkpoint.zip"
+PREPROCESSED_ZIP_URL = "https://github.com/tomjiu/isekaijoucho_colab_repo/releases/download/v0-data/isekaijoucho_preprocessed_logs.zip"
 ```
 
 `CHECKPOINT_ZIP_URL` can be left empty to train from pretrained HiFi-GAN instead of resuming local epoch 1.
+`PREPROCESSED_ZIP_URL` should stay filled if you want Colab to skip preprocessing and start training faster.
 
 ## Automatic Backups
 

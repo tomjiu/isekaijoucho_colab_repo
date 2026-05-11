@@ -31,6 +31,36 @@ def unzip(src: Path, dst: Path) -> None:
         archive.extractall(dst)
 
 
+def rewrite_filelist_for_colab(log_dir: Path) -> None:
+    filelist_path = log_dir / "filelist.txt"
+    if not filelist_path.exists():
+        return
+    rewritten = []
+    for raw_line in filelist_path.read_text(encoding="utf-8").splitlines():
+        if not raw_line.strip():
+            continue
+        parts = raw_line.split("|")
+        if len(parts) < 5:
+            continue
+        wav_name = Path(parts[0].replace("\\", "/")).name
+        feat_name = Path(parts[1].replace("\\", "/")).name
+        f0_name = Path(parts[2].replace("\\", "/")).name
+        f0_voiced_name = Path(parts[3].replace("\\", "/")).name
+        speaker_id = parts[4]
+        rewritten.append(
+            "|".join(
+                [
+                    str(log_dir / "sliced_audios" / wav_name),
+                    str(log_dir / "extracted" / feat_name),
+                    str(log_dir / "f0" / f0_name),
+                    str(log_dir / "f0_voiced" / f0_voiced_name),
+                    speaker_id,
+                ]
+            )
+        )
+    filelist_path.write_text("\n".join(rewritten) + "\n", encoding="utf-8")
+
+
 def github_api(
     method: str,
     url: str,
@@ -198,6 +228,7 @@ def main() -> None:
     parser.add_argument("--applio-dir", default="/content/Applio")
     parser.add_argument("--data-url", required=True)
     parser.add_argument("--checkpoint-url", default="")
+    parser.add_argument("--preprocessed-url", default="")
     parser.add_argument("--model-name", default="isekaijoucho_whispertrim")
     parser.add_argument("--total-epoch", type=int, default=20)
     parser.add_argument("--batch-size", type=int, default=6)
@@ -217,68 +248,76 @@ def main() -> None:
 
     install_applio(applio_dir)
 
-    data_zip = Path("/content/isekaijoucho_source_audio.zip")
-    download(args.data_url, data_zip)
-    unzip(data_zip, source_dir)
+    if args.preprocessed_url:
+        preprocessed_zip = Path("/content/isekaijoucho_preprocessed_logs.zip")
+        download(args.preprocessed_url, preprocessed_zip)
+        log_dir.mkdir(parents=True, exist_ok=True)
+        unzip(preprocessed_zip, log_dir)
+        rewrite_filelist_for_colab(log_dir)
+        print(f"Using preprocessed training logs from {args.preprocessed_url}", flush=True)
+    else:
+        data_zip = Path("/content/isekaijoucho_source_audio.zip")
+        download(args.data_url, data_zip)
+        unzip(data_zip, source_dir)
 
-    copy_prepare_script(repo_dir, applio_dir)
-    prepare_script = applio_dir / "scripts" / "prepare_isekaijoucho_dataset.py"
-    patch_prepare_paths(prepare_script, source_dir, dataset_dir)
-    run([sys.executable, str(prepare_script)], cwd=applio_dir)
+        copy_prepare_script(repo_dir, applio_dir)
+        prepare_script = applio_dir / "scripts" / "prepare_isekaijoucho_dataset.py"
+        patch_prepare_paths(prepare_script, source_dir, dataset_dir)
+        run([sys.executable, str(prepare_script)], cwd=applio_dir)
 
-    run(
-        [
-            sys.executable,
-            "core.py",
-            "preprocess",
-            "--model_name",
-            args.model_name,
-            "--dataset_path",
-            str(dataset_dir),
-            "--sample_rate",
-            str(args.sample_rate),
-            "--cpu_cores",
-            str(args.cpu_cores),
-            "--cut_preprocess",
-            "Automatic",
-            "--process_effects",
-            "False",
-            "--noise_reduction",
-            "False",
-            "--noise_reduction_strength",
-            "0.0",
-            "--chunk_len",
-            "3.0",
-            "--overlap_len",
-            "0.3",
-            "--normalization_mode",
-            "post",
-        ],
-        cwd=applio_dir,
-    )
+        run(
+            [
+                sys.executable,
+                "core.py",
+                "preprocess",
+                "--model_name",
+                args.model_name,
+                "--dataset_path",
+                str(dataset_dir),
+                "--sample_rate",
+                str(args.sample_rate),
+                "--cpu_cores",
+                str(args.cpu_cores),
+                "--cut_preprocess",
+                "Automatic",
+                "--process_effects",
+                "False",
+                "--noise_reduction",
+                "False",
+                "--noise_reduction_strength",
+                "0.0",
+                "--chunk_len",
+                "3.0",
+                "--overlap_len",
+                "0.3",
+                "--normalization_mode",
+                "post",
+            ],
+            cwd=applio_dir,
+        )
 
-    run(
-        [
-            sys.executable,
-            "core.py",
-            "extract",
-            "--model_name",
-            args.model_name,
-            "--f0_method",
-            args.f0_method,
-            "--cpu_cores",
-            str(args.cpu_cores),
-            "--gpu",
-            "0",
-            "--sample_rate",
-            str(args.sample_rate),
-            "--embedder_model",
-            "contentvec",
-            "--include_mutes",
-            "2",
-        ],
-        cwd=applio_dir,
-    )
+        run(
+            [
+                sys.executable,
+                "core.py",
+                "extract",
+                "--model_name",
+                args.model_name,
+                "--f0_method",
+                args.f0_method,
+                "--cpu_cores",
+                str(args.cpu_cores),
+                "--gpu",
+                "0",
+                "--sample_rate",
+                str(args.sample_rate),
+                "--embedder_model",
+                "contentvec",
+                "--include_mutes",
+                "2",
+            ],
+            cwd=applio_dir,
+        )
 
     if args.checkpoint_url:
         checkpoint_zip = Path("/content/isekaijoucho_epoch1_checkpoint.zip")
