@@ -1,0 +1,32 @@
+# isekaijoucho Applio Colab Trainer
+
+Colab helper for training the `isekaijoucho_whispertrim` Applio/RVC model from the local source audio.
+
+## What Goes In Git
+
+- `notebooks/isekaijoucho_applio_colab.ipynb`: Colab notebook launcher.
+- `scripts/colab_train.py`: end-to-end Colab runner.
+- `scripts/prepare_isekaijoucho_dataset.py`: Whisper-based intro trimming script.
+
+Large audio/checkpoint files should be uploaded as GitHub Release assets, not committed to git.
+
+## Release Assets
+
+Recommended assets:
+
+- `isekaijoucho_source_audio.zip`: original MP3/WAV source files.
+- `isekaijoucho_epoch1_checkpoint.zip`: optional local epoch-1 resume checkpoints.
+
+After uploading release assets, paste their browser-download URLs into the notebook:
+
+```python
+DATA_ZIP_URL = "https://github.com/<user>/<repo>/releases/download/v0-data/isekaijoucho_source_audio.zip"
+CHECKPOINT_ZIP_URL = "https://github.com/<user>/<repo>/releases/download/v0-data/isekaijoucho_epoch1_checkpoint.zip"
+```
+
+`CHECKPOINT_ZIP_URL` can be left empty to train from pretrained HiFi-GAN instead of resuming local epoch 1.
+
+## Expected Speed
+
+On a Colab T4, `batch_size=6` or `8` is usually much faster than the local GTX 1650 `batch_size=1`. If Colab reports CUDA OOM, lower `BATCH_SIZE` in the notebook.
+
